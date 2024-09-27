@@ -1,0 +1,503 @@
+---
+title: "YAssignment 2 - Functions, iteration, and debugging"
+author: "RGazzaneo"
+date: "`r Sys.Date()`"
+output: html_document  #
+---
+
+<style>
+div.answer {background-color:#f3f0ff; border-radius: 5px; padding: 20px;}
+</style>
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      error = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      comment = NA)
+```
+
+<!-- Do not forget to input your Github username in the YAML configuration up there -->
+
+------------------------------------------------------------------------
+
+```{r, include = T}
+# LOAD THE PACKAGES YOU ARE USING IN THIS CODE CHUNK
+#install.packages("unvotes")
+#install.packages("base")
+library(unvotes)
+library(dplyr)
+library(tidyr)
+library(purrr)
+
+options(repos = c(CRAN = "https://cran.r-project.org"))
+```
+
+<br>
+
+------------------------------------------------------------------------
+
+### Task 1 - Warm-up
+
+Program a function `ultimate_answer()` that always returns the number 42 regardless of which input is provided, and show that it works providing three function calls that test different input types!
+
+```{r}
+# YOUR CODE HERE
+
+#42 ultimate answer function
+ultimate_answer <- function(...) 
+{
+  return(42)
+}
+
+# test function
+  test_meaning_of_everything <- function(n) #n being the number of tests to run
+  { 
+  for (i in 1:n) #repets the test n times
+    {
+      #random input generation of different types of entry
+      random_input <- list(
+       sample(1:1000, 1), #random integer between 1 and 1000
+       paste(sample(letters, 10, replace = TRUE), collapse = ""),#random 10 character string
+       sample(c(TRUE, FALSE), 1), #random logical
+       runif(5)#random double
+      )
+
+      # randomly select an input from list
+      input <- random_input[[sample(1:4, 1)]]
+    
+      # test the ultimate_answer function
+      result <- ultimate_answer(input)
+    
+      if (result != 42)
+      {
+        return(paste("Test failed: ultimate_answer() did not return 42 for input:", input))
+      }
+    }
+  
+  return("42 is definitely is the answer to life, the universe, and everything!")
+}
+
+print(paste('ANSWER:',test_meaning_of_everything(3)))
+
+
+```
+
+<br>
+
+------------------------------------------------------------------------
+
+### Task 2 - The Monty Hall Machine
+
+a)  Write an R function that simulates the [Monty Hall problem](https://en.wikipedia.org/wiki/Monty_Hall_problem). Start with writing a function called `monty_hall_choice()` that:
+
+-   Simulates a single round of the Monty Hall problem.
+-   Has an argument switch that controls whether the contestant switches doors after Monty reveals a goat.
+-   Returns TRUE if the contestant wins the car, and FALSE if they do not. Test it by running it 10 times each with switch = TRUE and switch = FALSE, and summarize the results.
+
+```{r}
+# YOUR CODE HERE
+
+#function that simulates one round of monty hall
+#enter the chosen door and if switch TRUE or FALSE for the round
+
+monty_hall_choice <- function(choice1, switch)
+{
+  monty_doors <- sample(c("goat", "goat", "car"))  # random placement of the car and goats
+  available_doors <- setdiff(1:3, choice1) # not chosen doors
+  
+  #choose door among the 2 available doors
+  a <-sample(available_doors,1)
+  b <- monty_doors[a]
+  # if chosen door is goat, opens, if not opens the other
+  monty_opens <- ifelse(b=="goat", a, setdiff(1:3,c(choice1,a)))
+
+  if (switch) # finds the closed door that was not the 1st chosen and replaces it
+  {
+    free_door <- setdiff(1:3, c(choice1, monty_opens))
+    choice2 <- free_door
+  }
+  else {choice2 <- choice1}
+  
+  # tests if contestant_2nd_choice=car and returns true or false  
+  return(monty_doors[choice2] == "car")
+}
+
+# ====================================================================
+
+#function to run tests 10 on monty_hall_choice()
+
+test_monty_hall <- function(n)
+{
+  choice1 <- sample(1:3, n, TRUE) #creates random vector w/ chosen door for the n tests
+  with_switch <- c() #creates empty vector to summarize n tests w/ switch
+  without_switch <- c() #creates empty vector to summarize n tests w/out switch
+  
+  for (i in choice1) #run function n times w/ and w/out switch
+  {
+    with_switch <- c(with_switch, monty_hall_choice(i, switch = TRUE))
+    without_switch <- c(without_switch, monty_hall_choice(i, switch = FALSE))
+  }
+  
+  #summarize results in a table
+  return(results <- data.frame(choice1,with_switch,without_switch))
+}
+
+print('ANSWER:')
+print(results_summary <- test_monty_hall(10))
+
+```
+
+<br>
+
+b)  Now, create a function `monty_hall_simulation()` to simulate multiple rounds of the Monty Hall problem:
+
+-   The function should wrap around the `monty_hall_choice()`.
+-   Add an argument n to the function that specifies how many rounds to simulate.
+-   The function should return the proportion of times the contestant wins the car for both strategies (switch = TRUE and switch = FALSE).
+
+```{r}
+# YOUR CODE HERE
+
+monty_hall_simulation <- function(n)
+{
+  choice1 <- sample(1:3, n, TRUE)
+  with_switch <- c()
+  without_switch <- c()
+  
+  for (i in choice1)
+  {
+    with_switch <- c(with_switch, monty_hall_choice(i, TRUE))
+    without_switch <- c(without_switch, monty_hall_choice(i, FALSE))
+  }
+  
+  results <- data.frame(choice1,with_switch,without_switch)
+  
+  #proportion of win w/switch
+  p_with = (sum(results$with_switch)/n)
+  #proportion of win w/out switch
+  p_without = (sum(results$without_switch)/n)
+  
+  return(c(p_with,p_without))
+}
+
+results<-monty_hall_simulation(10)
+
+cat("ANSWER:\n Proportion of wins with switch:", results[1]*100, "%\n Proportion of wins without switch:", results[2]*100, "%" )
+
+```
+
+<br>
+
+c)  **Bonus challenge:** Generalize the Monty Hall Problem to k doors and k-1 goats, where the host will open all doors except for 2. Now, visualize the probability of winning (proportion of wins) for both strategies (switch and stay) as a function of the number of simulated rounds n and the number of doors k, for a set of values for both n and k that you choose. *Important:* This is just for fun. You don't have to work on this task if you don't have time. Providing a right/wrong solution does not give/cost you extra points. (A right solution gives you kudos from the instructor though!)
+
+```{r}
+# YOUR CODE HERE
+
+#################################################################################################
+#                                                                                               #
+#       WARNING: This code has a bug                                                            #
+#                                                                                               #
+#       The function k_monty_hall_choice randomly return the following error:                   #
+#                                                                                               #
+#           Error in sample.int(length(x), size, replace, prob) :                               # 
+#            invalid first argument                                                             #
+#                                                                                               #
+#       Apparently it occurs whenever available_doors returns an integer(0)                     #
+#       However, it was not supposed to happen, any insides on it will be deeply appreciated    #
+#                                                                                               #
+#       WORK AROUND: on k_monty_hall_choice, I replaced the error for NULL                      #
+#                    when k_monty_hall_simulation gets NULL, it ignores it and run again        #
+#                                                                                               #
+#################################################################################################
+
+k_monty_hall_choice <- function(choice, switch, k)
+{
+  tryCatch(
+    {
+      monty_doors <- rep("goat", k) # creates goat vector
+      monty_doors [sample(1:k, 1)] <- "car" # random placement of the car
+      monty_opens <- NULL
+      available_doors <- c(1:k)
+      
+      while(length(available_doors) >= 2)
+           {
+              available_doors<-setdiff(1:k,c(choice,monty_opens))# not chosen doors
+              a <-sample(available_doors,1)#choose door among the available doors
+              b <- monty_doors[a]
+             
+              # if chosen door is goat, opens, if not opens the other
+              monty_opens <- ifelse(b=="goat", a, sample(1:k,sample(setdiff(available_doors, a),1)))
+              
+              if (switch==TRUE) # finds the closed door that was not the 1st chosen and replaces it
+                  {
+                      choice <- sample(available_doors,1)
+                  }
+          
+              k=k-1
+            }
+    
+      #tests if contestant_2nd_choice=car and returns true or false
+      return(monty_doors[choice] == "car")
+    },error = function(e) {return(NULL)})
+}
+
+#=====================================================================
+
+k_monty_hall_simulation <- function(n, k)
+{
+  choice <- sample(1:k, n, TRUE)
+  with_switch <- c()
+  without_switch <- c()
+
+  for (i in choice)
+  {
+    a <- NULL
+    while(is.null(a))
+    {a <- k_monty_hall_choice(i, TRUE,k)}
+    with_switch <- c(with_switch, a)
+    
+    b <- NULL
+    while(is.null(b))
+    {b <- k_monty_hall_choice(i, FALSE,k)}
+    without_switch <- c(without_switch, b)
+  }
+
+  results <- data.frame(choice,with_switch,without_switch)
+  
+  #proportion of win w/switch
+  p_with = (sum(results$with_switch)/n)
+  #proportion of win w/out switch
+  p_without = (sum(results$without_switch)/n)
+  
+  return(c(p_with,p_without))
+}
+
+results<- k_monty_hall_simulation(10, 10)
+
+cat("ANSWER:\n Proportion of wins with switch:", results[1]*100, "%\n Proportion of wins without switch:", results[2]*100, "%" )
+
+```
+
+<br>
+
+------------------------------------------------------------------------
+
+### Task 3 - Functional programming in practice
+
+The `unvotes` package (hosted both on [CRAN](https://cran.r-project.org/web/packages/unvotes/index.html) and [GitHub](https://github.com/dgrtwo/unvotes)) provides data on the voting history of countries in the [United Nations General Assembly](http://www.un.org/en/ga/), along with information such as date, description, and topics for each vote. The package contains three datasets: `un_votes`, providing the history of each country's votes, `un_roll_calls`, providing information on each roll call vote, and `un_roll_call_issues`, providing issue (topic) classifications of roll call votes. Check out the [database tutorial](https://github.com/dgrtwo/unvotes) if you want to make yourself familiar with the data structure. Then, work on the following tasks.
+
+```{r}
+# YOUR CODE HERE
+
+###disclaimer###
+# after structuring the sequence of the code, I used chatGPT to convert ass the steps into pipeline
+# also heavily used in b)
+```
+
+a)  Calculate how often, on average, Germany agreed with the US on a vote in the UN general assembly since 1995. Votes where voting information for one of the countries is missing should be discarded.
+
+```{r}
+# YOUR CODE HERE
+
+average_agreement <- un_votes %>%
+  inner_join(un_roll_calls, by = "rcid") %>% #inner_join un_votes and un_roll_calls, by "rcid"
+  mutate(year = as.numeric(substring(date, 1, 4))) %>%  #extract year
+  filter(year >= 1995, country %in% c("Germany", "United States")) %>%  #filter year
+  filter(!is.na(vote)) %>%  #cleaning missing votes
+  select(year, country, vote) %>%  #select needed columns
+  group_by(year, country) %>%  #group by year and country
+  summarise(vote = first(vote), .groups = "drop") %>%  #summarise
+  pivot_wider(names_from = country, values_from = vote) %>%  #from long to wide
+  filter(!is.na(Germany), !is.na(`United States`)) %>%  #cleaning missing votes
+  mutate(agreement = ifelse(Germany == `United States`, 1, 0)) %>%  #agreement column
+  summarise(average_agreement = mean(agreement) * 100, .groups = "drop")  #calc percentage avarage
+
+cat("ANSWER:",as.numeric(average_agreement$average_agreement),"%")
+
+```
+
+<br>
+
+b)  Now, create a function, `votes_agreement_calculator()`, that takes country identifiers as well as a `year_min` argument as inputs and that returns the share of agreement in voting between any two specified countries as numeric value, for a time period specified with year \>= `year_min`. The function should take the necessary data frames directly from the `unvotes` package. Then, test the function by computing the agreement rates for (a) the United States and Russia for votes cast in 2000 and later and (b) France and the UK for votes cast in 2000 and later!
+
+```{r}
+# YOUR CODE HERE
+
+votes_agreement_calculator <- function(country1, country2, year_min) {
+  # load tables
+  data("un_votes")
+  data("un_roll_calls")
+  
+  votes_filtered <- un_votes %>%
+    filter(country %in% c(country1, country2)) %>% #filter country 1 and 2
+    inner_join(un_roll_calls %>% 
+                 filter(date >= as.Date(paste0(year_min, "-01-01"))), by = "rcid")#filter year
+  
+  # Pivot the data so each row contains both countries' votes for each roll call (chatGPT)
+  votes_pivot <- votes_filtered %>%
+    select(rcid, country, vote) %>%
+    pivot_wider(names_from = country, values_from = vote, names_prefix = "vote_") %>%
+    filter(!is.na(!!sym(paste0("vote_", country1))), !is.na(!!sym(paste0("vote_", country2))))
+  
+  votes_pivot <- votes_pivot %>%
+    mutate(agreed = !!sym(paste0("vote_", country1)) == !!sym(paste0("vote_", country2)))#agreed column
+  
+  agreement_rate <- mean(votes_pivot$agreed)#avarage rate
+  return(agreement_rate)
+}
+
+us_russia_agreement <- votes_agreement_calculator("United States", "Russia", 2000)
+france_uk_agreement <- votes_agreement_calculator("France", "United Kingdom", 2000)
+
+cat("ANSWER: a)", us_russia_agreement* 100,"% | b)",france_uk_agreement*100,"%")
+
+```
+
+<br>
+
+c)  Using `purrr` functionality, find out which three countries on average agreed with the US the most from the year 2000 on!
+
+```{r}
+# YOUR CODE HERE
+
+top_agreeing_countries <- function(input_country, year_min)
+  {
+  
+    data("un_votes")
+
+    countries <- un_votes %>%
+      distinct(country) %>%
+      filter(country != input_country) %>%
+      pull(country)
+    
+    safe_agreement_calculator <- safely(votes_agreement_calculator)
+    #(purrr) maps countries and calculate agreement rates
+     agreement_rates <- map_dfr(countries, function(country)
+       {
+        result <- safe_agreement_calculator(input_country, country, year_min)
+    
+        # Check if the result contains an error
+        if (!is.null(result$error))
+          {
+            agreement_rate <- 0
+          }else{agreement_rate <- result$result}
+    
+    tibble(country = country, agreement_rate = agreement_rate)
+  })
+      
+    #get top_3
+    top_countries <- agreement_rates %>%
+      filter(!is.na(agreement_rate)) %>%  # Remove NA rates
+      arrange(desc(agreement_rate)) %>%
+      head(3)
+    
+    return(top_countries)
+  }
+
+print(top_agreeing_countries("United States", 2000))
+
+```
+
+<br>
+
+------------------------------------------------------------------------
+
+### Task 4 - Debugging code
+
+The following code is meant to create a bar chart showing the average height of Star Wars characters by their species, with text labels displaying the number of characters belonging to each species and arranged by average height in decreasing order. The data ships with the `dplyr` package. However, the code contains multiple bugs. Fix them. As proof, the HTML should include the plot that is generated by the code.
+
+```{r, eval = FALSE}
+library("ggplot2", "dplyr")   
+
+# Group characters by species and calculate summary statistics
+species_data <- star_wars %>% 
+  group.by(species) %>% 
+  summarise(
+    avg_height = mean(height),  
+    num_characters = count()
+  ) %>% 
+  arrange(avg_height)
+
+# Plotting the results
+ggplot(species_data, aes(x = species, y = avg_height)) + 
+  geom_bar(stat = bar, aes(fill = avg_height))
+  geom_text(aes(label = num_characters), vjust = "top")
+  xlab("Species") + 
+  ylab("Average Height") +
+  title("Average Height by Species")
+# Setting color scale
+scale_color_gradient(low = "blue", high = "red")
+```
+
+<br> STEP 1: Guaranteed that the dataframe is available and loaded properly
+
+```         
+    > install.packages("dplyr")
+    > library(ggplot2)
+    > library(dplyr)
+    > head(starwars)
+```
+
+STEP 2: Fix of minor issues
+
+Issues detected:
+
+-   group.by() -\> group_by()
+-   count() -\> n()
+-   stat = bar -\> stat = "identity"
+-   title() -\> ggtitle()
+-   scale_color_gradient() -\> scale_fill_gradient()
+
+STEP 3: To print the plot removed 'eval = FALSE', assigned the plot to a variable 'plot' and used function print.
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+
+head(starwars)
+
+species_data <- starwars %>% 
+  group_by(species) %>% 
+  summarise(
+    avg_height = mean(height, na.rm = TRUE),
+    num_characters = n()
+  ) %>% 
+  arrange(desc(avg_height))
+
+image_plot <- ggplot(species_data, aes(x = species, y = avg_height)) + 
+  geom_bar(stat = "identity", aes(fill = avg_height)) +  
+  geom_text(aes(label = num_characters), vjust = "top") + 
+  xlab("Species") + 
+  ylab("Average Height") +
+  ggtitle("Average Height by Species") +  
+  scale_fill_gradient(low = "blue", high = "red")  
+
+```
+
+<br> STEP 4: Reorder the plot and fix labels
+
+```{r}
+
+species_data <- starwars %>% 
+  mutate(species = replace_na(species, "NA")) %>% #rename NA otherwise its not reorderd
+  group_by(species) %>% 
+  summarise(
+    avg_height = mean(height, na.rm = TRUE),
+    num_characters = n()
+  ) %>% 
+  arrange(desc(avg_height))
+
+image_plot <- ggplot(species_data, aes(x = reorder(species, -avg_height), y = avg_height)) + 
+  geom_bar(stat = "identity", aes(fill = avg_height)) +  
+  geom_text(aes(label = num_characters), vjust = "top", angle = 0, hjust = 0.5) + 
+  xlab("Species") + 
+  ylab("Average Height") +
+  ggtitle("Average Height by Species") +  
+  scale_fill_gradient(low = "blue", high = "red")
+  image_plot + theme(axis.text.x = element_text(angle = 75, vjust = 1, hjust=1))
+
+print(plot)
+```
