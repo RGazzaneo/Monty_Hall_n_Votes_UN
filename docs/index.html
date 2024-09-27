@@ -13,7 +13,7 @@
 
 <meta name="date" content="2024-09-27" />
 
-<title>YAssignment 2 - Functions, iteration, and debugging</title>
+<title>Assignment 2 - Functions, iteration, and debugging</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,7 +350,7 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">YAssignment 2 - Functions, iteration, and
+<h1 class="title toc-ignore">Assignment 2 - Functions, iteration, and
 debugging</h1>
 <h4 class="author">RGazzaneo</h4>
 <h4 class="date">2024-09-27</h4>
@@ -487,16 +487,16 @@ print(&#39;ANSWER:&#39;)</code></pre>
 <pre><code>[1] &quot;ANSWER:&quot;</code></pre>
 <pre class="r"><code>print(results_summary &lt;- test_monty_hall(10))</code></pre>
 <pre><code>   choice1 with_switch without_switch
-1        2        TRUE          FALSE
-2        1       FALSE          FALSE
-3        1        TRUE           TRUE
-4        2        TRUE           TRUE
-5        2       FALSE           TRUE
-6        1        TRUE          FALSE
-7        2        TRUE          FALSE
-8        2        TRUE           TRUE
-9        2        TRUE           TRUE
-10       3       FALSE           TRUE</code></pre>
+1        3        TRUE           TRUE
+2        1        TRUE          FALSE
+3        2        TRUE           TRUE
+4        2       FALSE           TRUE
+5        3        TRUE          FALSE
+6        3        TRUE          FALSE
+7        2       FALSE          FALSE
+8        1        TRUE          FALSE
+9        1        TRUE          FALSE
+10       1        TRUE          FALSE</code></pre>
 <p><br></p>
 <ol start="2" style="list-style-type: lower-alpha">
 <li>Now, create a function <code>monty_hall_simulation()</code> to
@@ -539,8 +539,8 @@ results&lt;-monty_hall_simulation(10)
 
 cat(&quot;ANSWER:\n Proportion of wins with switch:&quot;, results[1]*100, &quot;%\n Proportion of wins without switch:&quot;, results[2]*100, &quot;%&quot; )</code></pre>
 <pre><code>ANSWER:
- Proportion of wins with switch: 50 %
- Proportion of wins without switch: 40 %</code></pre>
+ Proportion of wins with switch: 60 %
+ Proportion of wins without switch: 30 %</code></pre>
 <p><br></p>
 <ol start="3" style="list-style-type: lower-alpha">
 <li><strong>Bonus challenge:</strong> Generalize the Monty Hall Problem
@@ -876,7 +876,7 @@ image_plot &lt;- ggplot(species_data, aes(x = reorder(species, -avg_height), y =
 <pre class="r"><code>print(plot)</code></pre>
 <pre><code>function (x, y, ...) 
 UseMethod(&quot;plot&quot;)
-&lt;bytecode: 0x000001317a634128&gt;
+&lt;bytecode: 0x000001dc1262c128&gt;
 &lt;environment: namespace:base&gt;</code></pre>
 </div>
 
