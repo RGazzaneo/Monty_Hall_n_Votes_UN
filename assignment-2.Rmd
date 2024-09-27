@@ -450,7 +450,7 @@ Issues detected:
 -   title() -\> ggtitle()
 -   scale_color_gradient() -\> scale_fill_gradient()
 
-STEP 3: To print the plot removed 'eval = FALSE', assigned the plot to a variable 'plot' and used function print.
+STEP 3: To print the plot removed 'eval = FALSE', assigned the plot to a variable 'image_plot' and used function print.
 
 ```{r}
 
@@ -499,5 +499,4 @@ image_plot <- ggplot(species_data, aes(x = reorder(species, -avg_height), y = av
   scale_fill_gradient(low = "blue", high = "red")
   image_plot + theme(axis.text.x = element_text(angle = 75, vjust = 1, hjust=1))
 
-print(plot)
 ```
